@@ -1,0 +1,9 @@
+(class main
+ (method void main ()
+  (let ((bool b) (string c) (int d))
+    (print b)  # prints False
+    (print c)  # prints empty string
+    (print d)  # prints 0
+  )
+ )
+)
