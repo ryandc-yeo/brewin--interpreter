@@ -211,3 +211,32 @@ class ClassDef:
                     "invalid type for parameter " + param.name,
                     method_def.line_num,
                 )
+
+class TemplateDef():
+    def __init__(self, class_source, interpreter):
+        self.interpreter = interpreter
+        self.class_source = class_source
+
+        # name needs @ so we can't create an official name yet
+        # might not even need name in template def if we're gonna redefine it with classdef but o well
+        # self.name = class_source[1]
+
+    def get_class_source(self, params):
+        # we do a search and replace here
+        if len(self.class_source[2]) != len(params):
+            self.interpreter.error(
+                ErrorType.SYNTAX_ERROR, # CHECK THIS
+                f"parameter length does not match, supposed to be: {len(params)}"
+            )
+        replace = dict(zip(self.class_source[2], params))
+        # need to utilize parser cuz we have too many sub lists
+        replaced_source = self.__replace_keywords(replace, self.class_source)
+        return replaced_source
+    
+    def __replace_keywords(self, replace_dict, item):
+        if isinstance(item, list):
+            return [self.__replace_keywords(replace_dict, i) for i in item]
+        elif item in replace_dict:
+            return replace_dict[item]
+        else:
+            return item

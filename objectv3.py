@@ -180,6 +180,12 @@ class ObjectDef:
     # add all local variables defined in a let to the environment
     def __add_locals_to_env(self, env, var_defs, line_number):
         for var_def in var_defs:
+            if InterpreterBase.TYPE_CONCAT_CHAR in var_def[0]:
+                temp_split = var_def[0].split(InterpreterBase.TYPE_CONCAT_CHAR)
+                index = temp_split[0]
+                params = temp_split[1:]
+                self.interpreter.create_template(index, params)
+                
             # vardef in the form of (typename varname defvalue)
             var_type = Type(var_def[0])
             var_name = var_def[1]

@@ -1,4 +1,4 @@
-from classv3 import ClassDef
+from classv3 import ClassDef, TemplateDef
 from intbase import InterpreterBase, ErrorType
 from bparser import BParser
 from objectv3 import ObjectDef
@@ -13,6 +13,7 @@ class Interpreter(InterpreterBase):
     def __init__(self, console_output=True, inp=None, trace_output=False):
         super().__init__(console_output, inp)
         self.trace_output = trace_output
+        self.template_index = {}
 
     # run a program, provided in an array of strings, one string per line of source code
     # usese the provided BParser class found in parser.py to parse the program into lists
@@ -77,6 +78,24 @@ class Interpreter(InterpreterBase):
     # right-hand-side variable, e.g., (set person_obj_ref (new teacher))
     def check_type_compatibility(self, typea, typeb, for_assignment=False):
         return self.type_manager.check_type_compatibility(typea, typeb, for_assignment)
+    
+    def create_template(self, template_name, params):
+        if not self.template_index.get(template_name):
+            super().error(
+                ErrorType.NAME_ERROR,
+                f"Template Name does not exist {template_name}",
+            )
+        name = InterpreterBase.TYPE_CONCAT_CHAR.join([template_name] + params)
+        if not self.type_manager.is_valid_type(name):
+            template = self.template_index[template_name]
+            self.type_manager.add_class_type(name, None)
+            class_source = template.get_class_source(params)
+            self.class_index[name] = ClassDef(class_source, self)
+    
+    def __map_template_names_to_template_defs(self, item):
+        template_name = item[1]
+        self.template_index[template_name] = TemplateDef(item, self)
+        # self.type_manager.add_class_type(template_name, None)
 
     def __map_class_names_to_class_defs(self, program):
         self.class_index = {}
@@ -100,17 +119,26 @@ class Interpreter(InterpreterBase):
                 if item[2] == InterpreterBase.INHERITS_DEF:
                     superclass_name = item[3]
                 self.type_manager.add_class_type(class_name, superclass_name)
+            elif item[0] == InterpreterBase.TEMPLATE_CLASS_DEF:
+                self.__map_template_names_to_template_defs(item)
+
 
 
 def main():
-    program = ['(class main',
-               '(field int a 15)',
+    program = ['(tclass node (field_type)',
+'(field node@field_type next null)',
+'(field field_type value)',
+'(method void set_val ((field_type v)) (set value v))',
+'(method field_type get_val () (return value))',
+'(method void set_next((node@field_type n)) (set next n))',
+'(method node@field_type get_next() (return next))',
+')',
+'(class main',
 '(method void main ()',
-'(let ((bool b) (string c "15") (int d))',
-'(print b)  # prints False',
-'(print c)  # prints empty string',
-'(print d)  # prints 0',
-'(print a)',
+'(let ((node@int x null))',
+'(set x (new node@int))',
+'(call x set_val 5)',
+'(print (call x get_val))',
 ')',
 ')',
 ')']
@@ -119,4 +147,4 @@ def main():
     interpreter.run(program)
 
 
-# main()
+main()
