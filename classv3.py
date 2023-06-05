@@ -225,7 +225,7 @@ class TemplateDef():
         # we do a search and replace here
         if len(self.class_source[2]) != len(params):
             self.interpreter.error(
-                ErrorType.SYNTAX_ERROR, # CHECK THIS
+                ErrorType.TYPE_ERROR, # CHECK THIS
                 f"parameter length does not match, supposed to be: {len(params)}"
             )
         replace = dict(zip(self.class_source[2], params))

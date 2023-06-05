@@ -20,7 +20,7 @@
 
 (class main
   (method void main ()
-    (let ((Square s) (Dog d) (MyTemplatedClass@Square@Dog t))
+    (let ((Square s) (Dog d) (MyTemplatedClass@Square@Dog@cat t))
       (set s (new Square))
       (set d (new Dog))
       (set t (new MyTemplatedClass@Square@Dog))
