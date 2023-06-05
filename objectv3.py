@@ -236,22 +236,6 @@ class ObjectDef:
         status, return_value = self.__execute_statement(env, return_type, code[2])
         env.block_unnest()
         return status, return_value
-        # try:
-        #     # env.block_nest()
-        #     # # self.__add_locals_to_env(env, code[1], code[0].line_num)  # wrong anyway
-        #     # env.create_new_symbol(InterpreterBase.EXCEPTION_VARIABLE_DEF)
-        #     status = ObjectDef.STATUS_PROCEED
-        #     return_value = None
-        #     status, return_value = self.__execute_statement(
-        #         env, return_type, code[1]
-        #     )
-
-        # except:
-        #     # print(self.exception)
-        #     print(env.get(InterpreterBase.EXCEPTION_VARIABLE_DEF))
-        # finally:
-        #     env.block_unnest()
-        #     return status, return_value
 
     def __execute_throw(self, env, return_type, code):
         string = self.__evaluate_expression(env, code[1], code[0].line_num)
@@ -378,6 +362,9 @@ class ObjectDef:
         while True:
             condition = self.__evaluate_expression(
                 env, code[1], code[0].line_num)
+            if isinstance(condition, tuple):
+                if condition[0] == ObjectDef.STATUS_EXCEPTION:
+                    return condition
             if condition.type() != ObjectDef.BOOL_TYPE_CONST:
                 self.interpreter.error(
                     ErrorType.TYPE_ERROR,
@@ -437,10 +424,10 @@ class ObjectDef:
                 env, expr[1], line_num_of_statement)
             operand2 = self.__evaluate_expression(
                 env, expr[2], line_num_of_statement)
-            if isinstance(operand1, tuple):
-                return operand1
-            if isinstance(operand2, tuple):
-                return operand2
+            # if isinstance(operand1, tuple):
+            #     return operand1
+            # if isinstance(operand2, tuple):
+            #     return operand2
             if (
                 operand1.type() == operand2.type()
                 and operand1.type() == ObjectDef.INT_TYPE_CONST
