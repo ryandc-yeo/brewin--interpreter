@@ -10,6 +10,7 @@ class ObjectDef:
     # statement execution results
     STATUS_PROCEED = 0
     STATUS_RETURN = 1
+    STATUS_EXCEPTION = 2
 
     # type constants
     INT_TYPE_CONST = Type(InterpreterBase.INT_DEF)
@@ -99,6 +100,8 @@ class ObjectDef:
         # value back to the caller
         if status == ObjectDef.STATUS_RETURN and return_value is not None:
             return return_value
+        if status == ObjectDef.STATUS_EXCEPTION:
+            return status, return_value
         # The method didn't explicitly return a value, so return the default return type for the method
         return create_default_value(method_def.get_return_type())
 
@@ -147,6 +150,10 @@ class ObjectDef:
             return self.__execute_print(env, code)
         elif tok == InterpreterBase.LET_DEF:
             return self.__execute_let(env, return_type, code)
+        elif tok == InterpreterBase.TRY_DEF:
+            return self.__execute_try(env, return_type, code)
+        elif tok == InterpreterBase.THROW_DEF:
+            return self.__execute_throw(env, return_type, code)
         else:
             # Report error via interpreter
             self.interpreter.error(
@@ -169,7 +176,7 @@ class ObjectDef:
         for statement in code[code_start:]:
             status, return_value = self.__execute_statement(
                 env, return_type, statement)
-            if status == ObjectDef.STATUS_RETURN:
+            if status == ObjectDef.STATUS_RETURN or status == ObjectDef.STATUS_EXCEPTION:
                 break
         # if we run through the entire block without a return, then just return proceed
         # we don't want the enclosing block to exit with a return
@@ -210,18 +217,66 @@ class ObjectDef:
     # uses helper function __execute_begin to implement its functionality
     def __execute_let(self, env, return_type, code):
         return self.__execute_begin(env, return_type, code, True)
+    
+    def __execute_try(self, env, return_type, code):
+        status = ObjectDef.STATUS_PROCEED
+        return_value = None
+        status, return_value = self.__execute_statement(
+            env, return_type, code[1]
+        )
+
+        if status != ObjectDef.STATUS_EXCEPTION:
+            return status, return_value
+        
+        env.block_nest()
+        env.create_new_symbol(InterpreterBase.EXCEPTION_VARIABLE_DEF)
+        excpetion_obj = VariableDef(Type(InterpreterBase.STRING_DEF), InterpreterBase.EXCEPTION_VARIABLE_DEF, return_value)
+        env.set(InterpreterBase.EXCEPTION_VARIABLE_DEF, excpetion_obj)
+
+        status, return_value = self.__execute_statement(env, return_type, code[2])
+        env.block_unnest()
+        return status, return_value
+        # try:
+        #     # env.block_nest()
+        #     # # self.__add_locals_to_env(env, code[1], code[0].line_num)  # wrong anyway
+        #     # env.create_new_symbol(InterpreterBase.EXCEPTION_VARIABLE_DEF)
+        #     status = ObjectDef.STATUS_PROCEED
+        #     return_value = None
+        #     status, return_value = self.__execute_statement(
+        #         env, return_type, code[1]
+        #     )
+
+        # except:
+        #     # print(self.exception)
+        #     print(env.get(InterpreterBase.EXCEPTION_VARIABLE_DEF))
+        # finally:
+        #     env.block_unnest()
+        #     return status, return_value
+
+    def __execute_throw(self, env, return_type, code):
+        string = self.__evaluate_expression(env, code[1], code[0].line_num)
+        if string.type() != Type(InterpreterBase.STRING_DEF):
+            self.interpreter.error(
+                ErrorType.TYPE_ERROR,
+                "Exception thrown needs to be a string but it is not.",
+                code[0].line_num
+            )
+        return ObjectDef.STATUS_EXCEPTION, string
 
     # (call object_ref/me methodname param1 param2 param3)
     # where params are expressions, and expresion could be a value, or a (+ ...)
     # statement version of a method call; there's also an expression version of a method call below
     def __execute_call(self, env, code):
-        return ObjectDef.STATUS_PROCEED, self.__execute_call_aux(
-            env, code, code[0].line_num
-        )
+        result = self.__execute_call_aux(env, code, code[0].line_num)
+        if isinstance(result, tuple):
+            return result[0], result[1]
+        return ObjectDef.STATUS_PROCEED, result
 
     # (set varname expression), where expression could be a value, or a (+ ...)
     def __execute_set(self, env, code):
         val = self.__evaluate_expression(env, code[2], code[0].line_num)
+        if isinstance(val, tuple):
+            return val[0], val[1]
         self.__set_variable_aux(
             env, code[1], val, code[0].line_num
         )  # checks/reports type and name errors
@@ -234,6 +289,8 @@ class ObjectDef:
             return ObjectDef.STATUS_RETURN, None
         else:
             result = self.__evaluate_expression(env, code[1], code[0].line_num)
+            if isinstance(result, tuple):
+                return result[0], result[1]
             # CAREY FIX
             if result.is_typeless_null():
                 self.__check_type_compatibility(
@@ -251,6 +308,8 @@ class ObjectDef:
         for expr in code[1:]:
             # TESTING NOTE: Will not test printing of object references
             term = self.__evaluate_expression(env, expr, code[0].line_num)
+            if isinstance(term, tuple):
+                return term[0], term[1]
             val = term.value()
             typ = term.type()
             if typ == ObjectDef.BOOL_TYPE_CONST:
@@ -292,6 +351,8 @@ class ObjectDef:
     # variable without ()s, or a boolean expression in parens, like (> 5 a)
     def __execute_if(self, env, return_type, code):
         condition = self.__evaluate_expression(env, code[1], code[0].line_num)
+        if isinstance(condition, tuple):
+            return condition[0], condition[1]
         if condition.type() != ObjectDef.BOOL_TYPE_CONST:
             self.interpreter.error(
                 ErrorType.TYPE_ERROR,
@@ -329,7 +390,7 @@ class ObjectDef:
             # condition is true, run body of while loop
             status, return_value = self.__execute_statement(
                 env, return_type, code[2])
-            if status == ObjectDef.STATUS_RETURN:
+            if status == ObjectDef.STATUS_RETURN or status == ObjectDef.STATUS_EXCEPTION:
                 return (
                     status,
                     return_value,
@@ -376,6 +437,10 @@ class ObjectDef:
                 env, expr[1], line_num_of_statement)
             operand2 = self.__evaluate_expression(
                 env, expr[2], line_num_of_statement)
+            if isinstance(operand1, tuple):
+                return operand1
+            if isinstance(operand2, tuple):
+                return operand2
             if (
                 operand1.type() == operand2.type()
                 and operand1.type() == ObjectDef.INT_TYPE_CONST
@@ -482,8 +547,11 @@ class ObjectDef:
         # prepare the actual arguments for passing
         actual_args = []
         for expr in code[3:]:
+            result = self.__evaluate_expression(env, expr, line_num_of_statement)
+            if isinstance(result, tuple):
+                return result[0], result[1]
             actual_args.append(
-                self.__evaluate_expression(env, expr, line_num_of_statement)
+                result
             )
         return obj.call_method(code[2], actual_args, super_only, line_num_of_statement)
 

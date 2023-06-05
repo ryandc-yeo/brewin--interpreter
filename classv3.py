@@ -229,7 +229,8 @@ class TemplateDef():
                 f"parameter length does not match, supposed to be: {len(params)}"
             )
         replace = dict(zip(self.class_source[2], params))
-        # need to utilize parser cuz we have too many sub lists
+        # need to utilize parser cuz we have too many sub lists JUST KIDDING
+        self.class_source[1] = InterpreterBase.TYPE_CONCAT_CHAR.join([self.class_source[1]]+self.class_source[2])
         replaced_source = self.__replace_keywords(replace, self.class_source)
         return replaced_source
     
@@ -244,10 +245,5 @@ class TemplateDef():
                 if split[i] in replace_dict:
                     split[i] = replace_dict[split[i]]
             return InterpreterBase.TYPE_CONCAT_CHAR.join(split)
-            # if ???s not in split:
-            #     self.interpreter.error(
-            #         ErrorType.SYNTAX_ERROR,
-            #         f"invalid template parameter to replace"
-            #     )
         else:
             return item

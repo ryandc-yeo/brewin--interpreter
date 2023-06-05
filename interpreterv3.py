@@ -125,20 +125,44 @@ class Interpreter(InterpreterBase):
 
 
 def main():
-    program = ['(tclass node (field_type)',
-'(field node@field_type next null)',
-'(field field_type value)',
-'(method void set_val ((field_type v)) (set value v))',
-'(method field_type get_val () (return value))',
-'(method void set_next((node@field_type n)) (set next n))',
-'(method node@field_type get_next() (return next))',
+#     program = ['(tclass MyTemplatedClass (shape_type animal_type)',
+# '(field shape_type some_shape)',
+# '(field animal_type some_animal)',
+# '(method void act ((shape_type s) (animal_type a))',
+# '(begin',
+# '(print "Shapes area: " (call s get_area))',
+# '(print "Animals name: " (call a get_name))',
+# ')',
+# ')',
+# ')',
+# '(class Square',
+# '(field int side 10)',
+# '(method int get_area () (return (* side side)))',
+# ')',
+# '(class Dog',
+# '(field string name "koda")',
+# '(method string get_name () (return name))',
+# ')',
+# '(class main',
+# '(method void main ()',
+# '(let ((Square s) (Dog d) (MyTemplatedClass@Square@Dog t))',
+# '(set s (new Square))',
+# '(set d (new Dog))',
+# '(set t (new MyTemplatedClass@Square@Dog))',
+# '(call t act s d)',
+# ')',
+# ')',
+# ')']
+    program = ['(tclass Foo (field_type)',
+'(method Foo@field_type return_me ()',
+'(return me)',
+')',
 ')',
 '(class main',
 '(method void main ()',
-'(let ((node@int x null))',
-'(set x (new node@int))',
-'(call x set_val 5)',
-'(print (call x get_val))',
+'(let ((Foo@int x null))',
+'(set x (new Foo@int))',
+'(print (call x return_me))',
 ')',
 ')',
 ')']
@@ -148,4 +172,4 @@ def main():
 
 # TODO: current test case above is because when initializing the class -> field at the start
 # or maybe even just work on exception because that has so many points to be earned
-main()
+# main()

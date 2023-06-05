@@ -1,13 +1,15 @@
-(tclass MyTemplatedClass (shape_type animal_type)
-  (field shape_type some_shape)
-  (field animal_type some_animal)
-  	  (method void act ((shape_type s) (animal_type a))
-          (begin
-            (print "Shape's area: " (call s get_area))
-            (print "Animal's name: " (call a get_name))
+(tclass MyTemplatedClass (temp1 temp2)
+  (field temp1 some_shape)
+  (field temp2 some_animal)
+  	  (method void act ((temp1 s) (temp2 a))
+          (let ((temp1 s) (temp2 d))
+            (print "Shape's area: " s)
+            (print "Animal's name: " d)
           )
         ) 
-)
+      )
+
+
 (class Square
   (field int side 10)
   (method int get_area () (return (* side side)))
