@@ -146,5 +146,6 @@ def main():
     interpreter = Interpreter()
     interpreter.run(program)
 
-
+# TODO: current test case above is because when initializing the class -> field at the start
+# or maybe even just work on exception because that has so many points to be earned
 main()

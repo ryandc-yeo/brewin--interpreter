@@ -238,5 +238,16 @@ class TemplateDef():
             return [self.__replace_keywords(replace_dict, i) for i in item]
         elif item in replace_dict:
             return replace_dict[item]
+        elif InterpreterBase.TYPE_CONCAT_CHAR in item:
+            split = item.split(InterpreterBase.TYPE_CONCAT_CHAR)
+            for i in range(len(split)):
+                if split[i] in replace_dict:
+                    split[i] = replace_dict[split[i]]
+            return InterpreterBase.TYPE_CONCAT_CHAR.join(split)
+            # if ???s not in split:
+            #     self.interpreter.error(
+            #         ErrorType.SYNTAX_ERROR,
+            #         f"invalid template parameter to replace"
+            #     )
         else:
             return item
