@@ -26,7 +26,7 @@ Features of this language includes:
 
 To learn more, here are the project specs broken down into 3 parts.
 - [Project 1](https://docs.google.com/document/d/1pPQ2qZKbbsbZGBSwvuy1Ir-NZLPMgVt95WPQuI5aPho/)
-- [Project 2](https://docs.google.com/document/d/1pPQ2qZKbbsbZGBSwvuy1Ir-NZLPMgVt95WPQuI5aPho/)
+- [Project 2](https://docs.google.com/document/d/1simlDMO0TK-YNDPYjkuU1C3fcaBpbIVYRaKD1pdqJj8/edit?usp=sharing)
 - [Project 3](https://docs.google.com/document/d/1YqSGkY4lE5nr-u27TQ-C8vd7f21SQA-qHL1aZf0ye4s/edit?usp=sharing)
 
 
